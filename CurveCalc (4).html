@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CurveCalc">
+<meta name="theme-color" id="theme-meta" content="#0a0a0f">
+<title>CurveCalc — BITS Pilani</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0a0f;--surf:#13131a;--surf2:#1c1c26;--surf3:#242432;
+  --bdr:#2a2a3a;--bdr2:#383850;
+  --lime:#c8f135;--lime2:#a8d020;--limd:rgba(200,241,53,.1);
+  --purp:#8b7fff;--purmd:rgba(139,127,255,.12);
+  --red:#ff5566;--redm:rgba(255,85,102,.1);
+  --amb:#ffb340;--ambm:rgba(255,179,64,.1);
+  --grn:#3dd68c;--grnm:rgba(61,214,140,.1);
+  --tx:#eeeef5;--tx2:#9090a8;--tx3:#4a4a62;
+  --r:14px;--rsm:8px;--rlg:20px;
+  --ff:'Bricolage Grotesque',sans-serif;
+  --fm:'JetBrains Mono',monospace;
+  --tr:0.17s cubic-bezier(.4,0,.2,1);
+}
+.light{--bg:#f2f2ee;--surf:#ffffff;--surf2:#f0f0eb;--surf3:#e4e4de;--bdr:#deded6;--bdr2:#ccccc4;--tx:#16161e;--tx2:#52526a;--tx3:#9898b0;}
+html,body{height:100%;-webkit-tap-highlight-color:transparent;overflow-x:hidden;}
+body{font-family:var(--ff);background:var(--bg);color:var(--tx);transition:background var(--tr),color var(--tr);}
+button,input,select{font-family:var(--ff);}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+
+.page{display:none;min-height:100vh;padding-bottom:90px;animation:fi .2s ease;}
+.page.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.cnt{max-width:700px;margin:0 auto;padding:0 15px;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--bdr);padding:11px 15px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(16px);}
+.nlogo{font-size:17px;font-weight:800;letter-spacing:-.03em;margin-right:auto;}
+.nlogo span{color:var(--lime);}
+.ib{width:34px;height:34px;border-radius:var(--rsm);border:1px solid var(--bdr);background:var(--surf);color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:all var(--tr);flex-shrink:0;}
+.ib:hover{border-color:var(--bdr2);color:var(--tx);}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--bg);border-top:1px solid var(--bdr);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--tx3);font-size:9px;font-family:var(--fm);letter-spacing:.05em;padding:5px 0;cursor:pointer;transition:color var(--tr);}
+.bni.on{color:var(--lime);}
+.bni svg{width:19px;height:19px;}
+
+/* CARDS */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rlg);padding:17px 18px;margin-bottom:10px;}
+.card-t{font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;}
+
+/* SUBJECT CARDS */
+.scard{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rlg);padding:16px 18px;cursor:pointer;transition:all var(--tr);position:relative;overflow:hidden;margin-bottom:9px;}
+.scard::after{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,var(--lime),var(--purp));opacity:0;transition:opacity var(--tr);}
+.scard:hover{border-color:var(--bdr2);transform:translateY(-1px);}
+.scard:hover::after{opacity:1;}
+.scard:active{transform:none;}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.sc-name{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.2;}
+.sc-nick{font-family:var(--fm);font-size:10px;color:var(--tx3);margin-top:2px;}
+.gbig{font-size:26px;font-weight:800;letter-spacing:-.04em;flex-shrink:0;line-height:1;}
+.sc-stats{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;}
+.sc-stat .sl{font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;}
+.sc-stat .sv{font-family:var(--fm);font-size:12px;font-weight:500;color:var(--tx2);margin-top:1px;}
+.sc-stat .sv.hi{color:var(--tx);}
+.pbar{height:2.5px;background:var(--surf3);border-radius:3px;margin-top:12px;overflow:hidden;}
+.pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lime),var(--lime2));transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+/* GRADE COLOURS */
+.gA{color:var(--lime);}
+.gA-{color:var(--lime2);}
+.gB{color:var(--purp);}
+.gB-{color:#7a6fd8;}
+.gC{color:var(--amb);}
+.gD{color:var(--red);}
+.g-{color:var(--tx3);}
+
+/* GPA BOX */
+.gpa-box{background:linear-gradient(135deg,var(--limd),var(--purmd));border:1px solid var(--bdr2);border-radius:var(--rlg);padding:18px;margin-bottom:10px;}
+.gpa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+.gpa-item{text-align:center;padding:0 8px;border-right:1px solid var(--bdr);}
+.gpa-item:last-child{border-right:none;}
+.gpa-lbl{font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+.gpa-val{font-size:26px;font-weight:800;letter-spacing:-.04em;}
+.gpa-chips{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;}
+.gpa-chip{display:flex;align-items:center;gap:5px;background:var(--surf);border:1px solid var(--bdr);border-radius:100px;padding:3px 10px;font-family:var(--fm);font-size:10px;}
+
+/* ADD BTN */
+.add-big{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr2);border-radius:var(--rlg);padding:16px;background:transparent;color:var(--tx3);font-size:13px;font-weight:500;width:100%;cursor:pointer;transition:all var(--tr);margin-top:2px;}
+.add-big:hover{border-color:var(--lime);color:var(--lime);background:var(--limd);}
+.add-sm{background:transparent;border:1px dashed var(--bdr2);border-radius:var(--rsm);padding:5px 11px;color:var(--tx3);font-family:var(--fm);font-size:10px;cursor:pointer;transition:all var(--tr);}
+.add-sm:hover{border-color:var(--lime);color:var(--lime);}
+
+/* METRICS */
+.mets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+.met{background:var(--surf2);border-radius:var(--r);padding:13px 14px;}
+.met-l{font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.met-v{font-size:22px;font-weight:800;letter-spacing:-.03em;}
+
+/* BANDS */
+.band-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);}
+.band-row:last-child{border-bottom:none;}
+.band-row.you{background:var(--limd);margin:0 -18px;padding:8px 18px;border-radius:var(--rsm);border-color:transparent;}
+.bpill{display:inline-flex;align-items:center;font-family:var(--fm);font-size:10px;font-weight:600;padding:2px 9px;border-radius:100px;}
+.bA{background:rgba(200,241,53,.15);color:var(--lime);border:1px solid rgba(200,241,53,.3);}
+.bA-{background:rgba(168,208,32,.1);color:var(--lime2);border:1px solid rgba(168,208,32,.2);}
+.bB{background:var(--purmd);color:var(--purp);border:1px solid rgba(139,127,255,.3);}
+.bB-{background:rgba(122,111,224,.08);color:#8a7fd8;border:1px solid rgba(122,111,224,.2);}
+.bC{background:var(--ambm);color:var(--amb);border:1px solid rgba(255,179,64,.2);}
+.bD{background:var(--redm);color:var(--red);border:1px solid rgba(255,85,102,.2);}
+.brand{font-family:var(--fm);font-size:11px;color:var(--tx3);}
+.you-tag{font-family:var(--fm);font-size:9px;color:var(--lime);margin-left:7px;}
+
+/* PROJ */
+.proj{background:var(--limd);border:1px solid rgba(200,241,53,.18);border-radius:var(--r);padding:13px;margin-top:10px;}
+.proj-t{font-family:var(--fm);font-size:9px;color:var(--lime);letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;}
+.proj-r{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(200,241,53,.08);font-family:var(--fm);font-size:12px;}
+.proj-r:last-child{border-bottom:none;}
+.pv{color:var(--lime);font-weight:500;}
+.pvi{color:var(--red);}
+.pnote{font-family:var(--fm);font-size:9px;color:var(--tx3);margin-top:7px;}
+
+/* ERROR BOX */
+.err-box{background:var(--redm);border:1px solid rgba(255,85,102,.3);border-radius:var(--r);padding:13px;margin-bottom:10px;font-family:var(--fm);font-size:12px;color:var(--red);line-height:1.5;}
+
+/* COMPONENTS */
+.ch{display:grid;grid-template-columns:1fr 50px 80px 80px 30px;gap:5px;margin-bottom:6px;}
+.ch span{font-family:var(--fm);font-size:9px;color:var(--tx3);text-align:center;letter-spacing:.06em;}
+.ch span:first-child{text-align:left;}
+.cr{display:grid;grid-template-columns:1fr 50px 80px 80px 30px;gap:5px;margin-bottom:6px;align-items:center;}
+.ci{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:7px 8px;color:var(--tx);font-family:var(--fm);font-size:12px;width:100%;text-align:center;transition:border-color var(--tr);}
+.ci:first-child{text-align:left;font-family:var(--ff);font-size:13px;}
+.ci:focus{outline:none;border-color:var(--lime);}
+.ci::placeholder{color:var(--tx3);}
+.db{width:30px;height:32px;border-radius:var(--rsm);border:1px solid var(--bdr);background:transparent;color:var(--tx3);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);flex-shrink:0;}
+.db:hover{border-color:var(--red);color:var(--red);}
+
+/* WEIGHT STATUS */
+.wbar-wrap{height:3px;background:var(--surf3);border-radius:3px;margin-top:10px;overflow:hidden;}
+.wbar-fill{height:100%;border-radius:3px;transition:width .35s ease;}
+.wtag{display:inline-flex;align-items:center;gap:5px;font-family:var(--fm);font-size:10px;padding:3px 9px;border-radius:100px;margin-top:6px;}
+.wok{background:var(--grnm);color:var(--grn);border:1px solid rgba(61,214,140,.25);}
+.wwarn{background:var(--ambm);color:var(--amb);border:1px solid rgba(255,179,64,.25);}
+.werr{background:var(--redm);color:var(--red);border:1px solid rgba(255,85,102,.25);}
+
+/* QUIZ */
+.qg{border:1px solid var(--bdr);border-radius:var(--r);padding:13px;margin-bottom:9px;}
+.qg-type-badge{font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:100px;margin-left:8px;}
+.qg-quiz{background:var(--purmd);color:var(--purp);border:1px solid rgba(139,127,255,.3);}
+.qg-lab{background:var(--grnm);color:var(--grn);border:1px solid rgba(61,214,140,.25);}
+.qcfg{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.qcl{font-family:var(--fm);font-size:11px;color:var(--tx2);}
+.si{width:52px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:6px 7px;color:var(--tx);font-family:var(--fm);font-size:12px;text-align:center;transition:border-color var(--tr);}
+.si:focus{outline:none;border-color:var(--lime);}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px;margin-bottom:9px;}
+.qsi{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:8px;color:var(--tx);font-family:var(--fm);font-size:13px;text-align:center;transition:all var(--tr);}
+.qsi.best{border-color:var(--lime);background:var(--limd);}
+.qsi:focus{outline:none;border-color:var(--lime);}
+.ql{font-family:var(--fm);font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;}
+.qavg-row{display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--bdr);flex-wrap:wrap;}
+.qalab{font-family:var(--fm);font-size:11px;color:var(--tx2);flex:1;min-width:140px;}
+.amode{display:flex;gap:4px;}
+.amb-btn{font-family:var(--fm);font-size:10px;padding:4px 8px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--tx3);cursor:pointer;transition:all var(--tr);}
+.amb-btn.on{background:var(--surf3);border-color:var(--bdr2);color:var(--tx);}
+
+/* SETTINGS */
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sl{font-family:var(--fm);font-size:12px;color:var(--tx2);flex:1;}
+.seti{width:72px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:7px 8px;color:var(--tx);font-family:var(--fm);font-size:12px;text-align:center;transition:border-color var(--tr);}
+.seti:focus{outline:none;border-color:var(--lime);}
+
+/* CURVE */
+.curl{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:9px 11px;color:var(--tx);font-family:var(--fm);font-size:11px;transition:border-color var(--tr);}
+.curl:focus{outline:none;border-color:var(--lime);}
+.curl::placeholder{color:var(--tx3);}
+.fbtn{background:var(--surf3);border:1px solid var(--bdr2);border-radius:var(--rsm);padding:9px 13px;color:var(--tx2);font-family:var(--fm);font-size:11px;white-space:nowrap;cursor:pointer;transition:all var(--tr);}
+.fbtn:hover{border-color:var(--lime);color:var(--lime);}
+.cdr{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-family:var(--fm);font-size:11px;}
+.cdr:last-child{border-bottom:none;}
+.cdv{color:var(--lime);}
+.suggest-box{background:var(--purmd);border:1px solid rgba(139,127,255,.25);border-radius:var(--r);padding:11px;margin-top:8px;}
+.suggest-t{font-family:var(--fm);font-size:9px;color:var(--purp);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.suggest-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-family:var(--fm);font-size:11px;border-bottom:1px solid rgba(139,127,255,.08);}
+.suggest-row:last-child{border-bottom:none;}
+.apply-btn{background:rgba(139,127,255,.2);border:1px solid rgba(139,127,255,.3);border-radius:6px;padding:3px 9px;color:var(--purp);font-family:var(--fm);font-size:10px;cursor:pointer;white-space:nowrap;margin-left:8px;flex-shrink:0;}
+
+/* HISTORICAL SEMS */
+.hist-sem{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 13px;margin-bottom:8px;}
+.hist-sem-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hist-sem-lbl{font-family:var(--fm);font-size:11px;color:var(--tx2);font-weight:600;}
+.hist-grades{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.hist-grade-item{display:flex;flex-direction:column;gap:3px;}
+.hist-grade-lbl{font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.06em;}
+.hist-grade-inp{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rsm);padding:5px 7px;color:var(--tx);font-family:var(--fm);font-size:12px;text-align:center;width:100%;transition:border-color var(--tr);}
+.hist-grade-inp:focus{outline:none;border-color:var(--lime);}
+.hist-grade-inp::placeholder{color:var(--tx3);}
+
+/* MANUAL CUTOFFS */
+.manual-cutoffs{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 13px;margin-top:8px;}
+.manual-cutoff-hdr{font-family:var(--fm);font-size:9px;color:var(--amb);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;}
+.manual-cutoff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;align-items:flex-end;justify-content:center;}
+.ov.open{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rlg) var(--rlg) 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:700px;max-height:88vh;overflow-y:auto;animation:su .22s cubic-bezier(.4,0,.2,1);}
+@keyframes su{from{transform:translateY(100%);}to{transform:none;}}
+.mh{width:34px;height:3px;background:var(--bdr2);border-radius:3px;margin:0 auto 16px;}
+.mt{font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:14px;}
+.mbtns{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
+.btn{font-family:var(--fm);font-size:12px;padding:9px 16px;border-radius:var(--rsm);border:1px solid var(--bdr);background:transparent;color:var(--tx);cursor:pointer;transition:all var(--tr);}
+.btn-p{background:var(--lime);color:#0a0a0f;border-color:var(--lime);font-weight:700;}
+.btn-p:hover{background:var(--lime2);}
+.btn-d{border-color:var(--red);color:var(--red);}
+.btn-d:hover{background:var(--redm);}
+.fl{font-family:var(--fm);font-size:11px;color:var(--tx2);display:block;margin-bottom:5px;letter-spacing:.04em;}
+.fi{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:10px 11px;color:var(--tx);font-family:var(--fm);font-size:13px;margin-bottom:11px;transition:border-color var(--tr);}
+.fi:focus{outline:none;border-color:var(--lime);}
+.fi::placeholder{color:var(--tx3);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239090a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+
+/* SEMESTERS */
+.sem-item{display:flex;align-items:center;justify-content:space-between;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:all var(--tr);margin-bottom:8px;}
+.sem-item:hover{border-color:var(--bdr2);}
+.sem-item.on{border-color:var(--lime);background:var(--limd);}
+.sem-n{font-size:14px;font-weight:600;}
+.sem-m{font-family:var(--fm);font-size:10px;color:var(--tx3);margin-top:2px;}
+
+/* MISC */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--bdr2);border-top-color:var(--lime);border-radius:50%;animation:rot .65s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px 16px;}
+.empty-ico{font-size:38px;margin-bottom:10px;}
+.empty-t{font-size:15px;font-weight:700;margin-bottom:5px;}
+.empty-d{font-family:var(--fm);font-size:11px;color:var(--tx3);line-height:1.6;}
+.hint{font-family:var(--fm);font-size:10px;color:var(--tx3);margin-top:5px;line-height:1.5;}
+.tag{display:inline-block;font-family:var(--fm);font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surf3);color:var(--tx3);border:1px solid var(--bdr);}
+.divider{height:1px;background:var(--bdr);margin:10px 0;}
+
+@media(max-width:420px){
+  .ch,.cr{grid-template-columns:1fr 44px 70px 70px 28px;gap:4px;}
+  .mets{grid-template-columns:1fr 1fr;}
+  .gpa-grid{grid-template-columns:repeat(3,1fr);}
+  .hist-grades{grid-template-columns:repeat(3,1fr);}
+  .manual-cutoff-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HOME -->
+  <div id="pg-home" class="page active">
+    <div class="nav">
+      <div class="nlogo">Curve<span>Calc</span></div>
+      <button class="ib" onclick="toggleTheme()" id="tbtn">☀</button>
+      <button class="ib" onclick="goPage('pg-sems')">📅</button>
+    </div>
+    <div class="cnt">
+      <div style="padding:22px 0 14px;">
+        <div style="font-size:clamp(1.5rem,5vw,2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;">Your <span style="color:var(--lime)">grades,</span><br>your curve.</div>
+        <div style="font-family:var(--fm);font-size:11px;color:var(--tx3);margin-top:5px;letter-spacing:.05em;">BITS PILANI · PILANI CAMPUS</div>
+        <button class="tag" style="margin-top:9px;cursor:pointer;" onclick="goPage('pg-sems')" id="sem-tag">—</button>
+      </div>
+      <div id="gpa-area"></div>
+      <div id="subj-list"></div>
+      <button class="add-big" onclick="openAddSubject()"><span style="font-size:18px;">+</span> Add Subject</button>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="pg-detail" class="page">
+    <div class="nav">
+      <button class="ib" style="font-size:20px;" onclick="goPage('pg-home')">‹</button>
+      <div style="flex:1;overflow:hidden;padding-left:8px;">
+        <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="d-title"></div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--tx3);" id="d-sub"></div>
+      </div>
+      <button class="ib btn-d" style="font-family:var(--fm);font-size:11px;width:auto;padding:0 10px;border-color:var(--red);color:var(--red);" onclick="promptDel()">del</button>
+    </div>
+    <div class="cnt" id="d-cnt"></div>
+  </div>
+
+  <!-- SEMESTERS -->
+  <div id="pg-sems" class="page">
+    <div class="nav">
+      <button class="ib" style="font-size:20px;" onclick="goPage('pg-home')">‹</button>
+      <div style="flex:1;font-size:16px;font-weight:700;padding-left:10px;">Semesters</div>
+    </div>
+    <div class="cnt" style="padding-top:20px;">
+      <div id="sem-list"></div>
+      <button class="add-big" onclick="openAddSem()"><span style="font-size:18px;">+</span> Add Semester</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bni on" id="bn-home" onclick="goPage('pg-home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>home
+  </button>
+  <button class="bni" id="bn-sems" onclick="goPage('pg-sems')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>semesters
+  </button>
+</div>
+
+<!-- MODAL -->
+<div class="ov" id="ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><div class="mh"></div><div id="mbody"></div></div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────
+const SK='cc_v6';
+function ds(){return{theme:'dark',activeSem:'s1',sems:{s1:{id:'s1',num:'2',year:'2025-26',prevSGPA:'',prevCredits:'',subjs:{}}}};}
+function ls(){try{return JSON.parse(localStorage.getItem(SK))||ds();}catch(e){return ds();}}
+function semName(s){return 'Sem '+s.num+' '+s.year;}
+let S=ls();let _sid=null;
+
+// ── UTILS ─────────────────────────────────────────────
+function uid(){return Math.random().toString(36).slice(2,9);}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function $(id){return document.getElementById(id);}
+function activeSem(){return S.sems[S.activeSem]||null;}
+function subjs(){const s=activeSem();return s?s.subjs:{};}
+function subj(id){return subjs()[id]||null;}
+function openModal(){$('ov').classList.add('open');}
+function closeModal(){$('ov').classList.remove('open');}
+
+// ── MUTATIONS ─────────────────────────────────────────
+// FIX: ss() defined before any usage
+function ss(){localStorage.setItem(SK,JSON.stringify(S));}
+
+// Seed DRM demo subject — now safe because uid() and ss() are defined above
+(()=>{
+  const sem=S.sems[S.activeSem];
+  if(!sem) return;
+  const hasDRM=Object.values(sem.subjs||{}).some(s=>s.code==='ECON F354');
+  if(!hasDRM){
+    const id='drm_'+uid();
+    sem.subjs[id]={
+      id,name:'Derivatives and Risk Management',nick:'DRM',code:'ECON F354',
+      credits:3,totalMarks:300,
+      oA:45,oA_:30,oB:15,oB_:0,oC:15,
+      manualCutoffs:{},
+      curveUrl:'',curveHistSems:[],curveData:null,
+      comps:[
+        {id:uid(),name:'Mid Sem',maxMarks:90,my:'49',av:'45.5'},
+        {id:uid(),name:'Compre',maxMarks:120,my:'',av:''},
+      ],
+      quizGrps:[],labGrps:[]};
+    ss();
+  }
+})();
+
+if(S.theme==='light'){document.body.classList.add('light');}
+if(S.theme==='light'){document.getElementById('tbtn').textContent='🌙';}
+
+// ── THEME ─────────────────────────────────────────────
+function toggleTheme(){
+  const l=document.body.classList.toggle('light');
+  S.theme=l?'light':'dark';
+  $('tbtn').textContent=l?'🌙':'☀';
+  document.getElementById('theme-meta').content=l?'#f2f2ee':'#0a0a0f';
+  ss();
+}
+
+// ── ROUTING ───────────────────────────────────────────
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $(id).classList.add('active');
+  document.querySelectorAll('.bni').forEach(b=>b.classList.remove('on'));
+  if(id==='pg-home'){$('bn-home').classList.add('on');renderHome();}
+  if(id==='pg-sems'){$('bn-sems').classList.add('on');renderSems();}
+  window.scrollTo(0,0);
+}
+
+// ── GRADE CALC ────────────────────────────────────────
+const GPTS={'A':10,'A–':9,'B':8,'B–':7,'C':6,'D':5};
+const GRADE_KEYS=['A','A–','B','B–','C'];
+
+function erf(x){
+  const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911,sg=x<0?-1:1;
+  x=Math.abs(x);const t=1/(1+p*x);
+  return sg*(1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));
+}
+
+// Migrate old data shape (avg→av, qgs→quizGrps+labGrps, curveManualAvg→curveHistSems)
+function migrateSubj(s){
+  // Rename avg→av in comps
+  if(s.comps) s.comps.forEach(c=>{if(c.avg!==undefined&&c.av===undefined){c.av=c.avg;delete c.avg;}});
+  // Migrate old qgs to quizGrps
+  if(s.qgs&&!s.quizGrps){s.quizGrps=s.qgs.map(q=>({...q,type:'quiz'}));delete s.qgs;}
+  if(!s.quizGrps) s.quizGrps=[];
+  if(!s.labGrps) s.labGrps=[];
+  if(!s.manualCutoffs) s.manualCutoffs={};
+  // Migrate old single-sem curve manual data
+  if(!s.curveHistSems){
+    s.curveHistSems=[];
+    if(s.curveManualAvg||s.curveManualA){
+      s.curveHistSems.push({id:uid(),label:'Sem 1',av:s.curveManualAvg||'',A:s.curveManualA||'','A–':'','B':'','B–':'','C':''});
+    }
+    delete s.curveManualAvg; delete s.curveManualA;
+  }
+  return s;
+}
+
+function calc(sRaw){
+  const s=migrateSubj({...sRaw,comps:(sRaw.comps||[]).map(c=>({...c}))});
+  const total=+s.totalMarks||0;
+
+  // Sum of all component max marks (comps + quiz best-N + lab best-N)
+  const compSum=(s.comps||[]).reduce((a,c)=>a+(+c.maxMarks||0),0)
+    +(s.quizGrps||[]).reduce((a,q)=>a+(+q.maxEa||0)*(+q.bestN||1),0)
+    +(s.labGrps||[]).reduce((a,l)=>a+(+l.maxEa||0)*(+l.bestN||1),0);
+  const mismatch=total>0&&Math.abs(compSum-total)>0.01;
+
+  let myRaw=0,avRaw=0,myKnown=false,avKnown=false,pend=[];
+
+  if(!mismatch){
+    (s.comps||[]).forEach(c=>{
+      const max=+c.maxMarks||0,my=parseFloat(c.my),av=parseFloat(c.av);
+      if(!isNaN(av)){avRaw+=av;avKnown=true;}
+      if(!isNaN(my)){myRaw+=my;myKnown=true;}
+      else if(!isNaN(av)) pend.push({name:c.name,max});
+    });
+    const processGrps=(grps,label)=>{
+      (grps||[]).forEach(qg=>{
+        const N=+qg.bestN||1,maxEa=+qg.maxEa||0,tmax=maxEa*N;
+        const sc=(qg.scores||[]).map(x=>parseFloat(x)).filter(x=>!isNaN(x));
+        const best=[...sc].sort((a,b)=>b-a).slice(0,N);
+        if(best.length===N){myRaw+=best.reduce((a,b)=>a+b,0);myKnown=true;}
+        else pend.push({name:qg.name||(label+' Group'),max:tmax});
+        let av=null;
+        if(qg.avgMode==='individual'&&qg.avgInd) av=parseFloat(qg.avgInd)*N;
+        else if(qg.avgAgg) av=parseFloat(qg.avgAgg);
+        if(av!==null&&!isNaN(av)){avRaw+=av;avKnown=true;}
+      });
+    };
+    processGrps(s.quizGrps,'Quiz');
+    processGrps(s.labGrps,'Lab');
+  }
+
+  const my=(!mismatch&&myKnown)?myRaw:null;
+  const av=(!mismatch&&avKnown)?avRaw:null;
+
+  // Manual cutoffs override computed offsets
+  const mc=s.manualCutoffs||{};
+  const oA=+s.oA||45,oA_=+s.oA_||30,oB=+s.oB||15,oB_=+s.oB_||0,oC=+s.oC||15;
+
+  // Effective cutoffs: manual takes priority over offset-based
+  const eff={
+    A: mc.A!==undefined&&mc.A!==''?parseFloat(mc.A):(av!==null?av+oA:null),
+    'A–': mc['A–']!==undefined&&mc['A–']!==''?parseFloat(mc['A–']):(av!==null?av+oA_:null),
+    B: mc.B!==undefined&&mc.B!==''?parseFloat(mc.B):(av!==null?av+oB:null),
+    'B–': mc['B–']!==undefined&&mc['B–']!==''?parseFloat(mc['B–']):(av!==null?av+oB_:null),
+    C: mc.C!==undefined&&mc.C!==''?parseFloat(mc.C):(av!==null?av-oC:null),
+  };
+
+  const cut=eff.A;
+  let grade='—';
+  if(my!==null&&(av!==null||Object.values(mc).some(v=>v!==''))){
+    if(eff.A!==null&&my>=eff.A) grade='A';
+    else if(eff['A–']!==null&&my>=eff['A–']) grade='A–';
+    else if(eff.B!==null&&my>=eff.B) grade='B';
+    else if(eff['B–']!==null&&my>=eff['B–']) grade='B–';
+    else if(eff.C!==null&&my>=eff.C) grade='C';
+    else grade='D';
+  }
+
+  let pct=null;
+  if(my!==null&&av!==null&&total>0){
+    const sd=total*0.15;
+    const z=(my-av)/sd;
+    pct=Math.round(Math.min(99,Math.max(1,(0.5+0.5*erf(z/Math.SQRT2))*100)));
+  }
+
+  let toNext=null,nextG=null;
+  if(my!==null&&pend.length>0){
+    const thr=[{g:'A',m:eff.A},{g:'A–',m:eff['A–']},{g:'B',m:eff.B},{g:'B–',m:eff['B–']},{g:'C',m:eff.C}];
+    for(const t of thr){if(t.m!==null&&my<t.m){nextG=t.g;toNext=t.m-my;break;}}
+  }
+
+  return{my,av,cut,eff,grade,pct,pend,toNext,nextG,oA,oA_,oB,oB_,oC,total,mismatch,compSum};
+}
+
+// ── GPA ───────────────────────────────────────────────
+// FIX: renamed local var from ss to subjList to avoid shadowing global ss()
+function calcSGPA(){
+  const subjList=Object.values(subjs());
+  let pts=0,creds=0;
+  subjList.forEach(s=>{
+    const g=calc(s).grade,gp=GPTS[g],cr=+s.credits||0;
+    if(gp!==undefined&&cr>0){pts+=gp*cr;creds+=cr;}
+  });
+  return creds>0?(pts/creds).toFixed(2):null;
+}
+
+function calcCGPA(){
+  const sem=activeSem();if(!sem)return null;
+  const prevSGPA=parseFloat(sem.prevSGPA),prevCr=parseFloat(sem.prevCredits);
+  const curSGPA=parseFloat(calcSGPA());
+  const curCr=Object.values(subjs()).reduce((a,s)=>a+(+s.credits||0),0);
+  if(isNaN(prevSGPA)||isNaN(prevCr)||prevCr<=0) return calcSGPA();
+  if(isNaN(curSGPA)||curCr<=0) return null;
+  return ((prevSGPA*prevCr+curSGPA*curCr)/(prevCr+curCr)).toFixed(2);
+}
+
+// ── HOME ──────────────────────────────────────────────
+function renderHome(){
+  const sem=activeSem();
+  $('sem-tag').textContent=(sem?semName(sem):'No semester')+' ›';
+  const subs=subjs(),keys=Object.keys(subs);
+
+  const sgpa=calcSGPA(),cgpa=calcCGPA();
+  $('gpa-area').innerHTML=keys.length>0?`
+    <div class="gpa-box">
+      <div class="gpa-grid">
+        <div class="gpa-item">
+          <div class="gpa-lbl">Curr. SGPA</div>
+          <div class="gpa-val" style="color:var(--lime)">${sgpa??'—'}</div>
+        </div>
+        <div class="gpa-item">
+          <div class="gpa-lbl">Prev. SGPA</div>
+          <div class="gpa-val" style="color:var(--tx2)">${sem?.prevSGPA||'—'}</div>
+        </div>
+        <div class="gpa-item">
+          <div class="gpa-lbl">Curr. CGPA</div>
+          <div class="gpa-val" style="color:var(--purp)">${cgpa??'—'}</div>
+        </div>
+      </div>
+      <div class="gpa-chips">
+        ${keys.map(id=>{const g=calc(subs[id]).grade,gc='g'+(g==='—'?'-':g.replace('–','-'));return`<div class="gpa-chip"><span class="${gc}" style="font-weight:700;">${g}</span><span style="color:var(--tx3);">${esc(subs[id].nick||subs[id].code||subs[id].name.slice(0,6))}</span></div>`;}).join('')}
+        <button class="gpa-chip" style="cursor:pointer;border-color:var(--bdr2);color:var(--tx2);" onclick="openPrevSGPA()">✎ prev data</button>
+      </div>
+    </div>`:'';
+
+  if(!keys.length){
+    $('subj-list').innerHTML=`<div class="empty"><div class="empty-ico">📚</div><div class="empty-t">No subjects yet</div><div class="empty-d">Add your first subject<br>to start tracking</div></div>`;
+    return;
+  }
+
+  $('subj-list').innerHTML=keys.map(id=>{
+    const s=subs[id],c=calc(s);
+    const gc='g'+(c.grade==='—'?'-':c.grade.replace('–','-'));
+    const filledMax=(s.comps||[]).reduce((a,c)=>a+(c.my!==''&&c.my!==undefined?+c.maxMarks||0:0),0);
+    const fp=c.total>0?Math.round(filledMax/c.total*100):0;
+    return `<div class="scard" onclick="openSubject('${esc(id)}')">
+      <div class="sc-top">
+        <div>
+          <div class="sc-name">${esc(s.name)}</div>
+          <div class="sc-nick">${esc(s.nick||'')} ${s.code?'· '+esc(s.code):''} ${s.credits?'· '+s.credits+' cr':''}</div>
+        </div>
+        <div class="gbig ${gc}">${c.grade}</div>
+      </div>
+      <div class="sc-stats">
+        ${c.my!==null?`<div class="sc-stat"><div class="sl">Score</div><div class="sv hi">${c.my.toFixed(1)}/${c.total}</div></div>`:''}
+        ${c.av!==null?`<div class="sc-stat"><div class="sl">Class Av</div><div class="sv">${c.av.toFixed(1)}/${c.total}</div></div>`:''}
+        ${c.pct!==null?`<div class="sc-stat"><div class="sl">Percentile</div><div class="sv hi">${c.pct}th</div></div>`:''}
+        ${c.toNext!==null?`<div class="sc-stat"><div class="sl">To ${c.nextG}</div><div class="sv">+${c.toNext.toFixed(1)}</div></div>`:''}
+        ${c.mismatch?`<div class="sc-stat"><div class="sl" style="color:var(--red);">⚠ marks mismatch</div></div>`:''}
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${fp}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function openPrevSGPA(){
+  const sem=activeSem();if(!sem)return;
+  $('mbody').innerHTML=`<div class="mt">Previous Semester Data</div>
+    <p style="font-family:var(--fm);font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.6;">Enter your cumulative SGPA and total credits from all previous semesters to calculate your CGPA accurately.</p>
+    <label class="fl">Previous cumulative SGPA</label>
+    <input class="fi" type="number" id="ipsgpa" value="${esc(sem.prevSGPA||'')}" placeholder="e.g. 8.42" step="0.01" min="0" max="10">
+    <label class="fl">Total credits completed (before this sem)</label>
+    <input class="fi" type="number" id="ipcr" value="${esc(sem.prevCredits||'')}" placeholder="e.g. 72" min="0">
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="savePrevSGPA()">Save</button></div>`;
+  openModal();
+}
+
+function savePrevSGPA(){
+  const sem=activeSem();if(!sem)return;
+  sem.prevSGPA=$('ipsgpa').value;
+  sem.prevCredits=$('ipcr').value;
+  ss();closeModal();renderHome();
+}
+
+// ── DETAIL ────────────────────────────────────────────
+function openSubject(id){
+  _sid=id;
+  const s=subj(id);if(!s)return;
+  migrateSubj(s);
+  $('d-title').textContent=s.name;
+  $('d-sub').textContent=[s.nick,s.code,s.credits?s.credits+' credits':''].filter(Boolean).join(' · ');
+  buildDetail(id);
+  goPage('pg-detail');
+}
+
+function buildDetail(id){
+  const cnt=$('d-cnt');cnt.innerHTML='';
+
+  // Results
+  const res=document.createElement('div');
+  res.className='card';res.id='res-'+id;res.style.marginTop='18px';
+  cnt.appendChild(res);
+
+  // Settings
+  const s=subj(id);
+  const gs=document.createElement('div');
+  gs.className='card';
+  gs.innerHTML=`<div class="card-t">Course Settings</div>
+    <div class="sr"><span class="sl">Short title (nick)</span><input class="seti" style="width:90px;" type="text" value="${esc(s.nick||'')}" placeholder="DRM" oninput="updSF('${id}','nick',this.value)"></div>
+    <div class="sr"><span class="sl">Course code</span><input class="seti" style="width:90px;" type="text" value="${esc(s.code||'')}" placeholder="ECON F354" oninput="updSF('${id}','code',this.value)"></div>
+    <div class="sr"><span class="sl">Credits</span><input class="seti" type="number" value="${s.credits||''}" placeholder="3" min="1" max="10" oninput="updSF('${id}','credits',this.value)"></div>
+    <div class="sr"><span class="sl">Total marks (e.g. 100, 200, 300)</span><input class="seti" type="number" value="${s.totalMarks||''}" placeholder="300" min="1" oninput="updSF('${id}','totalMarks',this.value)"></div>`;
+  cnt.appendChild(gs);
+
+  // Grade offsets
+  const go=document.createElement('div');
+  go.className='card';
+  go.innerHTML=`<div class="card-t">Grade Band Offsets <span style="font-size:8px;color:var(--tx3);">(raw marks above/below av — overridden by manual cutoffs)</span></div>
+    <div class="sr"><span class="sl">A = av +</span><input class="seti" type="number" value="${s.oA}" min="0" oninput="updSF('${id}','oA',this.value)"></div>
+    <div class="sr"><span class="sl">A– = av +</span><input class="seti" type="number" value="${s.oA_}" min="0" oninput="updSF('${id}','oA_',this.value)"></div>
+    <div class="sr"><span class="sl">B = av +</span><input class="seti" type="number" value="${s.oB}" min="0" oninput="updSF('${id}','oB',this.value)"></div>
+    <div class="sr"><span class="sl">B– = av +</span><input class="seti" type="number" value="${s.oB_}" min="0" oninput="updSF('${id}','oB_',this.value)"></div>
+    <div class="sr"><span class="sl">C = av –</span><input class="seti" type="number" value="${s.oC}" min="0" oninput="updSF('${id}','oC',this.value)"></div>`;
+  cnt.appendChild(go);
+
+  // Components
+  const cc=document.createElement('div');
+  cc.className='card';cc.id='cc-'+id;cnt.appendChild(cc);
+  renderComps(id);
+
+  // Quizzes
+  const qc=document.createElement('div');
+  qc.className='card';qc.id='qc-'+id;cnt.appendChild(qc);
+  renderQuizGrps(id);
+
+  // Labs
+  const lc=document.createElement('div');
+  lc.className='card';lc.id='lc-'+id;cnt.appendChild(lc);
+  renderLabGrps(id);
+
+  // Curve / Historical data
+  const cv=document.createElement('div');
+  cv.className='card';cv.id='cv-'+id;cnt.appendChild(cv);
+  renderCurve(id);
+
+  cnt.appendChild(Object.assign(document.createElement('div'),{style:'height:20px'}));
+  renderResults(id);
+}
+
+function renderResults(id){
+  const s=subj(id);if(!s)return;
+  const el=$('res-'+id);if(!el)return;
+  const c=calc(s);
+  const gc='g'+(c.grade==='—'?'-':c.grade.replace('–','-'));
+
+  if(c.mismatch){
+    el.innerHTML=`<div class="card-t">Results</div>
+      <div class="err-box">⚠ Component marks don't add up to course total.<br>
+      Components sum: <strong>${c.compSum}</strong> · Course total: <strong>${c.total}</strong><br>
+      Fix the max marks above — grades cannot be calculated until they match.</div>`;
+    return;
+  }
+
+  const bands=[
+    {g:'A', cls:'bA', min:c.eff.A,     max:null},
+    {g:'A–',cls:'bA-',min:c.eff['A–'], max:c.eff.A},
+    {g:'B', cls:'bB', min:c.eff.B,     max:c.eff['A–']},
+    {g:'B–',cls:'bB-',min:c.eff['B–'], max:c.eff.B},
+    {g:'C', cls:'bC', min:c.eff.C,     max:c.eff['B–']},
+    {g:'D', cls:'bD', min:null,         max:c.eff.C},
+  ];
+  const tot=c.total;
+  const bHtml=bands.map(b=>{
+    const you=b.g===c.grade;
+    const rs=b.min!==null&&b.max!==null?b.min.toFixed(1)+'–'+b.max.toFixed(1)+'/'+tot
+      :b.min!==null?b.min.toFixed(1)+'+/'+tot
+      :b.max!==null?'<'+b.max.toFixed(1)+'/'+tot:'—';
+    return `<div class="band-row${you?' you':''}"><div><span class="bpill ${b.cls}">${b.g}</span>${you?'<span class="you-tag">YOU</span>':''}</div><span class="brand">${rs}</span></div>`;
+  }).join('');
+
+  let pHtml='';
+  if(c.pend.length>0&&c.cut!==null){
+    const scored=c.my||0;
+    const need=c.cut-scored;
+    const totalPendMax=c.pend.reduce((s,p)=>s+p.max,0);
+    const impossible=need>totalPendMax;
+    let rows='';
+    if(impossible){
+      rows=`<div class="proj-r"><span style="color:var(--tx2)">Need ${need.toFixed(1)} more, only ${totalPendMax} marks left</span><span class="pvi">not achievable</span></div>`;
+    } else if(c.pend.length===1){
+      const p=c.pend[0];
+      const over=need>p.max;
+      rows=`<div class="proj-r"><span>${esc(p.name)}</span><span class="${over?'pvi':'pv'}">${need.toFixed(1)} / ${p.max}</span></div>`;
+    } else {
+      const tw=totalPendMax;
+      rows=c.pend.map(p=>{
+        const sh=(p.max/tw)*need;
+        const over=sh>p.max;
+        return`<div class="proj-r"><span>${esc(p.name)}</span><span class="${over?'pvi':'pv'}">${sh.toFixed(1)} / ${p.max}</span></div>`;
+      }).join('');
+      rows+=`<div class="pnote">* split proportionally across pending components</div>`;
+    }
+    pHtml=`<div class="proj"><div class="proj-t">To get an A — you need</div>${rows}</div>`;
+  }
+
+  el.innerHTML=`<div class="card-t">Results</div>
+    <div class="mets">
+      <div class="met"><div class="met-l">YOUR SCORE</div><div class="met-v ${gc}">${c.my!==null?c.my.toFixed(1)+'/'+tot:'—'}</div></div>
+      <div class="met"><div class="met-l">CLASS AV</div><div class="met-v" style="color:var(--tx2)">${c.av!==null?c.av.toFixed(1)+'/'+tot:'—'}</div></div>
+      <div class="met"><div class="met-l">A CUTOFF</div><div class="met-v" style="color:var(--purp)">${c.cut!==null?c.cut.toFixed(1)+'/'+tot:'—'}</div></div>
+      <div class="met"><div class="met-l">PERCENTILE</div><div class="met-v" style="color:var(--amb)">${c.pct!==null?c.pct+'th':'—'}</div></div>
+    </div>
+    ${bHtml}${pHtml}`;
+}
+
+// ── COMPONENTS ────────────────────────────────────────
+// FIX: updC no longer calls renderComps (avoids full DOM rebuild & focus loss on name field).
+// Instead it surgically updates just the weight bar and result panel.
+function updSF(id,f,v){const s=subj(id);if(!s)return;s[f]=v;ss();renderResults(id);}
+function updC(id,i,f,v){
+  const s=subj(id);if(!s)return;
+  s.comps[i][f]=v;
+  ss();
+  // Only rebuild comps DOM if max marks changed (affects weight bar), not on name/score edits
+  if(f==='maxMarks') renderComps(id);
+  else updateWeightBar(id);
+  renderResults(id);
+}
+function addComp(id){const s=subj(id);if(!s)return;s.comps.push({id:uid(),name:'New Component',maxMarks:0,my:'',av:''});ss();renderComps(id);}
+function delC(id,i){const s=subj(id);if(!s)return;s.comps.splice(i,1);ss();renderComps(id);renderResults(id);}
+
+function updateWeightBar(id){
+  const s=subj(id);if(!s)return;
+  const compSum=(s.comps||[]).reduce((a,c)=>a+(+c.maxMarks||0),0);
+  const qSum=(s.quizGrps||[]).reduce((a,q)=>a+(+q.maxEa||0)*(+q.bestN||1),0);
+  const lSum=(s.labGrps||[]).reduce((a,l)=>a+(+l.maxEa||0)*(+l.bestN||1),0);
+  const grand=compSum+qSum+lSum,tot=+s.totalMarks||0;
+  const ok=tot>0&&Math.abs(grand-tot)<0.01;
+  const over=grand>tot&&tot>0;
+  const wclr=ok?'var(--grn)':over?'var(--red)':'var(--amb)';
+  const wcls=ok?'wok':over?'werr':'wwarn';
+  const wmsg=ok?`✓ ${grand}/${tot} marks accounted for`:over?`⚠ ${grand} exceeds total ${tot}`:`⚠ ${grand}/${tot} — must equal ${tot}`;
+  const wb=$('wb-'+id),wt=$('wt-'+id);
+  if(wb) wb.style.width=(tot>0?Math.min(grand/tot*100,100):0)+'%',wb.style.background=wclr;
+  if(wt) wt.className='wtag '+wcls,wt.textContent=wmsg;
+}
+
+// Surgically update best-score highlighting + running total without rebuilding the score grid DOM
+function updateBestHighlight(id,type,gi){
+  const s=subj(id);if(!s)return;
+  const grp=type==="quiz"?s.quizGrps[gi]:s.labGrps[gi];
+  if(!grp)return;
+  const N=+grp.bestN||1;
+  const sc=(grp.scores||[]).map(x=>parseFloat(x));
+  const validSc=sc.filter(v=>!isNaN(v));
+  const bestIdxs=new Set([...sc.map((v,i)=>({v,i}))].filter(x=>!isNaN(x.v)).sort((a,b)=>b.v-a.v).slice(0,N).map(x=>x.i));
+  const bestSum=[...validSc].sort((a,b)=>b-a).slice(0,N).reduce((a,b)=>a+b,0);
+  const tmax=(+grp.maxEa||0)*N;
+  const prefix=type==="quiz"?"Q":"L";
+  const grid=document.getElementById(type+"sc-"+id+"-"+gi);
+  if(grid){
+    grid.querySelectorAll(".qsi").forEach((inp,si)=>{
+      const isBest=bestIdxs.has(si)&&!isNaN(sc[si]);
+      inp.classList.toggle("best",isBest);
+      const lbl=inp.nextElementSibling;
+      if(lbl)lbl.textContent=prefix+(si+1)+(isBest?" ★":"");
+    });
+  }
+  const totEl=document.getElementById(type+"tot-"+id+"-"+gi);
+  if(totEl) totEl.textContent=validSc.length>0?("Current best "+Math.min(validSc.length,N)+": "+bestSum.toFixed(1)+" / "+tmax):"";
+}
+
+function renderComps(id){
+  const s=subj(id);if(!s)return;
+  const el=$('cc-'+id);if(!el)return;
+  const compSum=(s.comps||[]).reduce((a,c)=>a+(+c.maxMarks||0),0);
+  const qSum=(s.quizGrps||[]).reduce((a,q)=>a+(+q.maxEa||0)*(+q.bestN||1),0);
+  const lSum=(s.labGrps||[]).reduce((a,l)=>a+(+l.maxEa||0)*(+l.bestN||1),0);
+  const grand=compSum+qSum+lSum,tot=+s.totalMarks||0;
+  const ok=tot>0&&Math.abs(grand-tot)<0.01;
+  const over=grand>tot&&tot>0;
+  const wclr=ok?'var(--grn)':over?'var(--red)':'var(--amb)';
+  const wcls=ok?'wok':over?'werr':'wwarn';
+  const wmsg=ok?`✓ ${grand}/${tot} marks accounted for`:over?`⚠ ${grand} exceeds total ${tot}`:`⚠ ${grand}/${tot} — must equal ${tot}`;
+
+  el.innerHTML=`<div class="card-t">Components <button class="add-sm" onclick="addComp('${id}')">+ add</button></div>
+    <div class="ch"><span style="text-align:left;">Name</span><span>Max</span><span>My score</span><span>Class av</span><span></span></div>
+    <div id="cl-${id}"></div>
+    <div class="wbar-wrap"><div class="wbar-fill" id="wb-${id}" style="width:${tot>0?Math.min(grand/tot*100,100):0}%;background:${wclr}"></div></div>
+    <span class="wtag ${wcls}" id="wt-${id}">${wmsg}</span>
+    <p class="hint">Enter raw marks. Max marks across all components must sum to course total (${tot||'set total above'}).</p>`;
+
+  const list=$('cl-'+id);
+  (s.comps||[]).forEach((c,i)=>{
+    const row=document.createElement('div');row.className='cr';
+    // FIX: Name input uses onchange instead of oninput to avoid losing focus on every keystroke.
+    // Score/max inputs still use oninput for live updates since they don't cause DOM rebuild.
+    row.innerHTML=`
+      <input class="ci" type="text" value="${esc(c.name)}" placeholder="Name"
+        onchange="updC('${id}',${i},'name',this.value)"
+        oninput="(function(el){const s=subj('${id}');if(s&&s.comps[${i}])s.comps[${i}].name=el.value;})(this)">
+      <input class="ci" type="number" value="${esc(c.maxMarks)}" placeholder="90" min="0" oninput="updC('${id}',${i},'maxMarks',this.value)">
+      <input class="ci" type="number" value="${esc(c.my)}" placeholder="—" min="0" oninput="updC('${id}',${i},'my',this.value)">
+      <input class="ci" type="number" value="${esc(c.av)}" placeholder="—" min="0" oninput="updC('${id}',${i},'av',this.value)">
+      <button class="db" onclick="delC('${id}',${i})">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+// ── QUIZ GROUPS ───────────────────────────────────────
+function updQG(id,qi,f,v){const s=subj(id);if(!s)return;s.quizGrps[qi][f]=v;ss();renderResults(id);}
+function addQuizGrp(id){const s=subj(id);if(!s)return;if(!s.quizGrps)s.quizGrps=[];s.quizGrps.push({id:uid(),name:'Quiz Group',type:'quiz',bestN:1,maxEa:10,scores:[],avgMode:'aggregate',avgAgg:'',avgInd:''});ss();renderQuizGrps(id);updateWeightBar(id);}
+function delQG(id,qi){const s=subj(id);if(!s)return;s.quizGrps.splice(qi,1);ss();renderQuizGrps(id);renderResults(id);updateWeightBar(id);}
+function addQScore(id,qi){const s=subj(id);if(!s)return;s.quizGrps[qi].scores.push('');ss();renderQuizGrps(id);renderResults(id);}
+function updQScore(id,qi,si,v){const s=subj(id);if(!s)return;s.quizGrps[qi].scores[si]=v;ss();updateBestHighlight(id,"quiz",qi);renderResults(id);}
+
+// ── LAB GROUPS ────────────────────────────────────────
+function updLG(id,li,f,v){const s=subj(id);if(!s)return;s.labGrps[li][f]=v;ss();renderResults(id);}
+function addLabGrp(id){const s=subj(id);if(!s)return;if(!s.labGrps)s.labGrps=[];s.labGrps.push({id:uid(),name:'Lab Group',type:'lab',bestN:1,maxEa:10,scores:[],avgMode:'aggregate',avgAgg:'',avgInd:''});ss();renderLabGrps(id);updateWeightBar(id);}
+function delLG(id,li){const s=subj(id);if(!s)return;s.labGrps.splice(li,1);ss();renderLabGrps(id);renderResults(id);updateWeightBar(id);}
+function addLScore(id,li){const s=subj(id);if(!s)return;s.labGrps[li].scores.push('');ss();renderLabGrps(id);renderResults(id);}
+function updLScore(id,li,si,v){const s=subj(id);if(!s)return;s.labGrps[li].scores[si]=v;ss();updateBestHighlight(id,"lab",li);renderResults(id);}
+
+function renderGrpSection(el,id,grps,type,updFn,delFn,addScoreFn,updScoreFn,addFn,labelSingular){
+  const badge=type==='quiz'?'qg-quiz':'qg-lab';
+  el.innerHTML=`<div class="card-t">${labelSingular}s <button class="add-sm" onclick="${addFn}('${id}')">+ add group</button></div>
+    ${!grps.length?`<div style="font-family:var(--fm);font-size:11px;color:var(--tx3);padding:8px 0 4px;">No ${labelSingular.toLowerCase()} groups yet</div>`:''}<div id="${type}gl-${id}"></div>`;
+  const cont=$(type+'gl-'+id);
+  grps.forEach((qg,qi)=>{
+    const sc=qg.scores||[],N=+qg.bestN||1;
+    const parsed=sc.map(x=>parseFloat(x));
+    const bestIdxs=new Set([...parsed.map((v,i)=>({v,i}))].filter(x=>!isNaN(x.v)).sort((a,b)=>b.v-a.v).slice(0,N).map(x=>x.i));
+    const validScores=parsed.filter(v=>!isNaN(v));
+    const bestSum=[...validScores].sort((a,b)=>b-a).slice(0,N).reduce((a,b)=>a+b,0);
+    const tmax=(+qg.maxEa||0)*N;
+    const hasScores=validScores.length>0;
+    const totLabel=hasScores?`Current best ${Math.min(validScores.length,N)}: ${bestSum.toFixed(1)} / ${tmax}`:'';
+    const mode=qg.avgMode||'aggregate';
+    const g=document.createElement('div');g.className='qg';
+    g.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="qg-type-badge ${badge}">${labelSingular}</span>
+        <input class="ci" style="flex:1;text-align:left;font-family:var(--ff);font-size:14px;font-weight:600;" type="text" value="${esc(qg.name||labelSingular)}" placeholder="Group name"
+          onchange="${updFn}('${id}',${qi},'name',this.value)"
+          oninput="(function(el){const s=subj('${id}');if(s&&s.${type}Grps[${qi}])s.${type}Grps[${qi}].name=el.value;})(this)">
+        <button class="db" onclick="${delFn}('${id}',${qi})">×</button>
+      </div>
+      <div class="qcfg">
+        <span class="qcl">Best</span>
+        <input class="si" type="number" value="${qg.bestN||1}" min="1" oninput="${updFn}('${id}',${qi},'bestN',this.value)">
+        <span class="qcl">of ${sc.length} | Each max</span>
+        <input class="si" type="number" value="${qg.maxEa||10}" min="1" oninput="${updFn}('${id}',${qi},'maxEa',this.value);updateWeightBar('${id}')">
+        <span class="qcl">marks</span>
+      </div>
+      <div class="qgrid" id="${type}sc-${id}-${qi}"></div>
+      <div id="${type}tot-${id}-${qi}" style="font-family:var(--fm);font-size:11px;color:var(--tx2);margin-bottom:6px;min-height:16px;"></div>
+      <button class="add-sm" onclick="${addScoreFn}('${id}',${qi})">+ add score</button>
+      <div class="qavg-row">
+        <span class="qalab">Class av mode:</span>
+        <div class="amode">
+          <button class="amb-btn${mode==='aggregate'?' on':''}" onclick="${updFn}('${id}',${qi},'avgMode','aggregate');render${labelSingular}Grps('${id}')">aggregate</button>
+          <button class="amb-btn${mode==='individual'?' on':''}" onclick="${updFn}('${id}',${qi},'avgMode','individual');render${labelSingular}Grps('${id}')">per ${labelSingular.toLowerCase()}</button>
+          <button class="amb-btn${mode==='both'?' on':''}" onclick="${updFn}('${id}',${qi},'avgMode','both');render${labelSingular}Grps('${id}')">both</button>
+        </div>
+      </div>
+      ${mode==='aggregate'||mode==='both'?`<div class="qavg-row"><span class="qalab">Class av best ${N} (out of ${(+qg.maxEa||0)*N}):</span><input class="si" style="width:64px;" type="number" value="${esc(qg.avgAgg)}" placeholder="—" oninput="${updFn}('${id}',${qi},'avgAgg',this.value)"></div>`:''}
+      ${mode==='individual'||mode==='both'?`<div class="qavg-row"><span class="qalab">Class av per ${labelSingular.toLowerCase()} (out of ${+qg.maxEa||0}):</span><input class="si" style="width:64px;" type="number" value="${esc(qg.avgInd)}" placeholder="—" oninput="${updFn}('${id}',${qi},'avgInd',this.value)"></div>`:''}`;
+    const sg=g.querySelector('#'+type+'sc-'+id+'-'+qi);
+    const totEl=g.querySelector('#'+type+'tot-'+id+'-'+qi);
+    if(totEl) totEl.textContent=totLabel;
+    sc.forEach((v,si)=>{
+      const w=document.createElement('div');
+      const isBest=bestIdxs.has(si)&&!isNaN(parseFloat(v));
+      w.innerHTML=`<input class="qsi${isBest?' best':''}" type="number" value="${esc(v)}" placeholder="—" min="0" oninput="${updScoreFn}('${id}',${qi},${si},this.value)"><div class="ql">${labelSingular[0]}${si+1}${isBest?' ★':''}</div>`;
+      sg.appendChild(w);
+    });
+    cont.appendChild(g);
+  });
+}
+
+function renderQuizGrps(id){
+  const s=subj(id);if(!s)return;
+  const el=$('qc-'+id);if(!el)return;
+  renderGrpSection(el,id,s.quizGrps||[],'quiz','updQG','delQG','addQScore','updQScore','addQuizGrp','Quiz');
+}
+function renderLabGrps(id){
+  const s=subj(id);if(!s)return;
+  const el=$('lc-'+id);if(!el)return;
+  renderGrpSection(el,id,s.labGrps||[],'lab','updLG','delLG','addLScore','updLScore','addLabGrp','Lab');
+}
+
+// ── CURVE / HISTORICAL DATA ───────────────────────────
+function updHistSem(id,hi,f,v){
+  const s=subj(id);if(!s)return;
+  if(!s.curveHistSems[hi]) return;
+  s.curveHistSems[hi][f]=v;
+  ss();renderCurveSuggestions(id);renderResults(id);
+}
+
+function addHistSem(id){
+  const s=subj(id);if(!s)return;
+  if(!s.curveHistSems) s.curveHistSems=[];
+  const n=s.curveHistSems.length+1;
+  s.curveHistSems.push({id:uid(),label:'Sem '+n,av:'',A:'','A–':'',B:'','B–':'',C:''});
+  ss();renderCurve(id);
+}
+
+function delHistSem(id,hi){
+  const s=subj(id);if(!s)return;
+  s.curveHistSems.splice(hi,1);
+  ss();renderCurve(id);renderResults(id);
+}
+
+function updManualCutoff(id,grade,v){
+  const s=subj(id);if(!s)return;
+  if(!s.manualCutoffs) s.manualCutoffs={};
+  s.manualCutoffs[grade]=v;
+  ss();renderResults(id);
+}
+
+// Compute averaged suggestions from historical sems
+function computeSuggestions(s){
+  const sems=s.curveHistSems||[];
+  const tot=+s.totalMarks||100;
+  const suggestions={};
+  GRADE_KEYS.forEach(g=>{
+    const vals=sems.map(hs=>{
+      const av=parseFloat(hs.av),cut=parseFloat(hs[g]);
+      if(!isNaN(av)&&!isNaN(cut)&&av>0) return((cut-av)/av*tot); // offset in raw marks relative to that sem's scale
+      return null;
+    }).filter(v=>v!==null);
+    if(vals.length>0) suggestions[g]=(vals.reduce((a,b)=>a+b,0)/vals.length);
+  });
+  return suggestions;
+}
+
+function renderCurveSuggestions(id){
+  const el=$('cv-suggest-'+id);if(!el)return;
+  const s=subj(id);if(!s)return;
+  const sems=s.curveHistSems||[];
+  if(!sems.length){el.innerHTML='';return;}
+  const tot=+s.totalMarks||100;
+  const sugg=computeSuggestions(s);
+  const rows=GRADE_KEYS.map(g=>{
+    if(sugg[g]===undefined) return '';
+    const rawOff=sugg[g].toFixed(1);
+    const sign=sugg[g]>=0?'+':'';
+    return `<div class="suggest-row">
+      <span style="color:var(--tx2);">${g} ≈ av ${sign}${rawOff} marks (avg of ${sems.filter(h=>parseFloat(h[g])!==NaN&&h[g]!=='').length} sem${sems.length!==1?'s':''})</span>
+      <button class="apply-btn" onclick="applyHistSuggestion('${id}','${g}',${sugg[g]})">Apply</button>
+    </div>`;
+  }).join('');
+  el.innerHTML=rows?`<div class="suggest-box"><div class="suggest-t">💡 Historical Av Suggestion</div>${rows}</div>`:'';
+}
+
+function applyHistSuggestion(id,grade,rawOff){
+  const s=subj(id);if(!s)return;
+  const fieldMap={'A':'oA','A–':'oA_','B':'oB','B–':'oB_','C':'oC'};
+  const f=fieldMap[grade];
+  if(!f) return;
+  // For C, offset is subtracted; for others, added
+  const val=grade==='C'?-rawOff:rawOff;
+  if(val<0&&grade!=='C') return; // sanity
+  s[f]=Math.max(0,Math.round(Math.abs(val)));
+  ss();buildDetail(id);
+}
+
+function renderCurve(id){
+  const s=subj(id);if(!s)return;
+  const el=$('cv-'+id);if(!el)return;
+  const sems=s.curveHistSems||[];
+  const mc=s.manualCutoffs||{};
+
+  const histHtml=sems.map((hs,hi)=>`
+    <div class="hist-sem">
+      <div class="hist-sem-hdr">
+        <input class="seti" style="width:120px;text-align:left;" type="text" value="${esc(hs.label)}" placeholder="e.g. 2024-25 Sem 1"
+          onchange="updHistSem('${id}',${hi},'label',this.value)"
+          oninput="(function(el){const s=subj('${id}');if(s&&s.curveHistSems[${hi}])s.curveHistSems[${hi}].label=el.value;})(this)">
+        <button class="db" onclick="delHistSem('${id}',${hi})">×</button>
+      </div>
+      <div class="hist-grades">
+        <div class="hist-grade-item"><div class="hist-grade-lbl">Av (raw)</div><input class="hist-grade-inp" type="number" value="${esc(hs.av)}" placeholder="e.g. 159" oninput="updHistSem('${id}',${hi},'av',this.value)"></div>
+        ${GRADE_KEYS.map(g=>`<div class="hist-grade-item"><div class="hist-grade-lbl" style="color:${gradeColor(g)}">${g} cutoff</div><input class="hist-grade-inp" type="number" value="${esc(hs[g])}" placeholder="—" oninput="updHistSem('${id}',${hi},'${g.replace('–','-')}',this.value);updHistSem('${id}',${hi},'${g}',this.value)"></div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  const manualHtml=`<div class="manual-cutoffs">
+    <div class="manual-cutoff-hdr">Manual Cutoff Override (this sem)</div>
+    <p class="hint" style="margin-bottom:8px;">Enter actual cutoffs to override projected bands. Leave blank to use offsets.</p>
+    <div class="manual-cutoff-grid">
+      ${GRADE_KEYS.map(g=>`<div class="hist-grade-item"><div class="hist-grade-lbl" style="color:${gradeColor(g)}">${g}</div><input class="hist-grade-inp" type="number" value="${esc(mc[g]??'')}" placeholder="—" oninput="updManualCutoff('${id}','${g}',this.value)"></div>`).join('')}
+    </div>
+  </div>`;
+
+  el.innerHTML=`<div class="card-t">curve.pilani Data</div>
+    <div style="display:flex;gap:7px;align-items:center;margin-bottom:8px;">
+      <input class="curl" type="url" id="curl-${id}" value="${esc(s.curveUrl||'')}" placeholder="Paste course URL from curve.pilani.online">
+      <button class="fbtn" onclick="fetchCurve('${id}')"><span id="ftxt-${id}">Fetch</span></button>
+    </div>
+    <p class="hint" style="margin-bottom:10px;">Fetches all historical semesters from curve.pilani.online automatically. Or add them manually below.</p>
+    ${s.curveData?`<div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 11px;margin-bottom:8px;font-family:var(--fm);font-size:11px;color:var(--grn);">✓ Last fetched: ${esc(s.curveData.fetchedAt||'')}</div>`:''}
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-family:var(--fm);font-size:10px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;">Historical Semesters</span>
+        <button class="add-sm" onclick="addHistSem('${id}')">+ add sem</button>
+      </div>
+      ${histHtml||`<div style="font-family:var(--fm);font-size:11px;color:var(--tx3);padding:4px 0 8px;">No historical data yet — fetch from URL or add manually.</div>`}
+    </div>
+    <div id="cv-suggest-${id}"></div>
+    ${manualHtml}`;
+
+  renderCurveSuggestions(id);
+}
+
+function gradeColor(g){
+  return g==='A'?'var(--lime)':g==='A–'?'var(--lime2)':g==='B'?'var(--purp)':g==='B–'?'#7a6fd8':g==='C'?'var(--amb)':'var(--red)';
+}
+
+// FIX: Rewritten to correctly parse the curve.pilani HTML structure.
+// The page shows grade cards with Cutoff values and per-semester averages.
+async function fetchCurve(id){
+  const urlEl=$('curl-'+id),url=urlEl?.value?.trim(),txt=$('ftxt-'+id);
+  if(!url){alert('Enter a curve.pilani URL first');return;}
+  if(txt) txt.innerHTML='<span class="spin"></span>';
+  try{
+    const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
+    const d=await r.json(),html=d.contents||'';
+
+    const s=subj(id);if(!s){if(txt)txt.textContent='Fetch';return;}
+
+    // Parse semester blocks: look for patterns like "2025-2026 Sem 1" with an "Av: 176.44"
+    // The page structure has year+sem labels and grade cutoff cards
+    const parsedSems=[];
+
+    // Match semester sections — each starts with a year-sem header and av
+    // Pattern: "2024-2025 Sem 2 ... Av: 159.27 ... grade cards"
+    const semBlockRe=/(\d{4}[-–]\d{4}\s+Sem\s+\d)[^]*?Av[:\s]+([0-9.]+)/gi;
+    let semMatch;
+    // Split the HTML by semester headers to process each block
+    // Look for year patterns like "2025-2026 Sem 1"
+    const semHeaderRe=/(\d{4}[-–]\d{4}\s+Sem\s+\d)/g;
+    const avRe=/\bAv[:\s]+([0-9.]+)/i;
+    // Grade cutoff: grade letter then "Cutoff" then number
+    // e.g. in the HTML: ">A<" ... ">Cutoff<" ... ">198<"
+    const gradeRe=(g)=>{
+      // Match grade label followed nearby by Cutoff value
+      const escaped=g.replace('–','(?:–|-)');
+      return new RegExp('>\\s*'+escaped+'\\s*<[^]*?>Cutoff<[^]*?>([0-9]+)<','i');
+    };
+
+    const semPositions=[];
+    let hm;
+    semHeaderRe.lastIndex=0;
+    while((hm=semHeaderRe.exec(html))!==null) semPositions.push({label:hm[1].replace(/\s+/g,' '),idx:hm.index});
+
+    semPositions.forEach((sp,i)=>{
+      const chunk=html.slice(sp.idx, semPositions[i+1]?semPositions[i+1].idx:html.length);
+      const avM=chunk.match(/\bAv[:\s]+([0-9.]+)/i);
+      const av=avM?avM[1]:'';
+      const cuts={};
+      // Parse each grade
+      ['A','A–','B','B–','C'].forEach(g=>{
+        const esc2=g.replace('–','(?:[-–])');
+        // Look for grade label then Cutoff value within ~500 chars
+        const re=new RegExp('>\\s*'+esc2+'\\s*<(?:[^>]*>){1,15}Cutoff(?:[^>]*>){1,5}([0-9]+)','i');
+        const m=chunk.match(re);
+        cuts[g]=m?m[1]:'';
+      });
+      parsedSems.push({id:uid(),label:sp.label,av,A:cuts['A'],'A–':cuts['A–'],B:cuts['B'],'B–':cuts['B–'],C:cuts['C']});
+    });
+
+    if(parsedSems.length>0){
+      s.curveUrl=url;
+      s.curveHistSems=parsedSems;
+      s.curveData={fetchedAt:new Date().toLocaleDateString()};
+      ss();renderCurve(id);renderResults(id);
+    } else {
+      // Fetch succeeded but parsing found nothing — show warning
+      s.curveUrl=url;s.curveData=null;ss();
+      $('cv-'+id)?.insertAdjacentHTML('beforeend','<p class="hint" style="color:var(--amb);margin-top:8px;">⚠ Page fetched but no semester data found. The page structure may have changed — add data manually below.</p>');
+    }
+  }catch(e){
+    const s=subj(id);if(s){s.curveUrl=url;ss();}
+    $('cv-'+id)?.insertAdjacentHTML('beforeend','<p class="hint" style="color:var(--amb);margin-top:8px;">⚠ Fetch failed (CORS or timeout). Add data manually — find it on curve.pilani.online.</p>');
+  }
+  if(txt) txt.textContent='Fetch';
+}
+
+// ── ADD SUBJECT ───────────────────────────────────────
+function openAddSubject(){
+  $('mbody').innerHTML=`<div class="mt">Add Subject</div>
+    <label class="fl">Full subject name *</label>
+    <input class="fi" type="text" id="iname" placeholder="e.g. Derivatives and Risk Management">
+    <div class="frow">
+      <div><label class="fl">Short title / nick</label><input class="fi" type="text" id="inick" placeholder="e.g. DRM"></div>
+      <div><label class="fl">Course code</label><input class="fi" type="text" id="icode" placeholder="e.g. ECON F354"></div>
+    </div>
+    <div class="frow">
+      <div><label class="fl">Credits</label><input class="fi" type="number" id="icr" placeholder="3" min="1" max="10"></div>
+      <div><label class="fl">Total marks</label><input class="fi" type="number" id="itot" placeholder="300" min="1"></div>
+    </div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="confirmAddSubject()">Add</button></div>`;
+  openModal();
+  setTimeout(()=>$('iname')?.focus(),100);
+}
+
+function confirmAddSubject(){
+  const name=$('iname').value.trim();
+  if(!name){alert('Please enter a subject name');return;}
+  const sem=activeSem();if(!sem)return;
+  const id=uid();
+  const tot=+$('itot').value||100;
+  // FIX: Default to Mid Sem + Compre as separate components
+  const midMax=Math.round(tot*0.3);
+  const compreMax=Math.round(tot*0.4);
+  const assignMax=tot-midMax-compreMax;
+  sem.subjs[id]={id,
+    name,nick:$('inick').value.trim(),code:$('icode').value.trim(),
+    credits:+$('icr').value||0,totalMarks:tot,
+    oA:45,oA_:30,oB:15,oB_:0,oC:15,
+    manualCutoffs:{},
+    curveUrl:'',curveHistSems:[],curveData:null,
+    comps:[
+      {id:uid(),name:'Mid Sem',maxMarks:midMax,my:'',av:''},
+      {id:uid(),name:'Compre',maxMarks:compreMax,my:'',av:''},
+      ...(assignMax>0?[{id:uid(),name:'Assignment/Quiz',maxMarks:assignMax,my:'',av:''}]:[]),
+    ],
+    quizGrps:[],labGrps:[]};
+  ss();closeModal();renderHome();
+}
+
+function promptDel(){
+  const s=subj(_sid);if(!s)return;
+  $('mbody').innerHTML=`<div class="mt">Delete Subject?</div>
+    <p style="font-family:var(--fm);font-size:12px;color:var(--tx3);margin-bottom:14px;">"${esc(s.name)}" will be permanently deleted.</p>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-d" onclick="confirmDel()">Delete</button></div>`;
+  openModal();
+}
+function confirmDel(){const sem=activeSem();if(!sem)return;delete sem.subjs[_sid];ss();closeModal();goPage('pg-home');}
+
+// ── SEMESTERS ─────────────────────────────────────────
+function renderSems(){
+  const list=$('sem-list'),keys=Object.keys(S.sems);
+  if(!keys.length){list.innerHTML='<div class="empty"><div class="empty-ico">📅</div><div class="empty-t">No semesters</div></div>';return;}
+  list.innerHTML=keys.map(id=>{
+    const sem=S.sems[id],isOn=id===S.activeSem,cnt=Object.keys(sem.subjs||{}).length;
+    return `<div class="sem-item${isOn?' on':''}" onclick="switchSem('${id}')">
+      <div><div class="sem-n">${esc(semName(sem))}</div><div class="sem-m">${cnt} subject${cnt!==1?'s':''} ${isOn?'· active':''}</div></div>
+      ${!isOn?`<button class="btn btn-d" style="padding:5px 10px;font-size:11px;" onclick="event.stopPropagation();delSem('${id}')">del</button>`:'<span style="font-family:var(--fm);font-size:10px;color:var(--lime);">ACTIVE</span>'}
+    </div>`;
+  }).join('');
+}
+
+function switchSem(id){S.activeSem=id;ss();renderSems();renderHome();}
+
+function openAddSem(){
+  const y=new Date().getFullYear();
+  const years=[`${y}-${String(y+1).slice(2)}`,`${y-1}-${String(y).slice(2)}`,`${y+1}-${String(y+2).slice(2)}`];
+  $('mbody').innerHTML=`<div class="mt">Add Semester</div>
+    <div class="frow" style="margin-bottom:12px;">
+      <div><label class="fl">Semester</label>
+        <select class="fi" id="inum" style="margin-bottom:0;">
+          <option value="1">Sem 1</option><option value="2" selected>Sem 2</option><option value="3">Sem 3 (Summer)</option>
+        </select>
+      </div>
+      <div><label class="fl">Academic Year</label>
+        <select class="fi" id="iyear" style="margin-bottom:0;">
+          ${years.map((yr,i)=>`<option value="${yr}"${i===0?' selected':''}>${yr}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:9px 12px;font-family:var(--fm);font-size:12px;color:var(--tx2);" id="sp">Sem 2 ${years[0]}</div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="confirmAddSem()">Add</button></div>`;
+  ['inum','iyear'].forEach(i=>{$(i).oninput=()=>{$('sp').textContent='Sem '+$('inum').value+' '+$('iyear').value;};});
+  openModal();
+}
+
+function confirmAddSem(){
+  const id='s'+uid();
+  S.sems[id]={id,num:$('inum').value,year:$('iyear').value,prevSGPA:'',prevCredits:'',subjs:{}};
+  ss();closeModal();renderSems();
+}
+
+function delSem(id){
+  if(Object.keys(S.sems).length<=1){alert('Cannot delete the only semester');return;}
+  delete S.sems[id];
+  if(S.activeSem===id) S.activeSem=Object.keys(S.sems)[0];
+  ss();renderSems();
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
